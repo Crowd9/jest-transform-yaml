@@ -15,6 +15,6 @@
   "author": "lshadler <lshadler13@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "js-yaml": "4.1.1"
+    "js-yaml": "4.2.0"
   }
 }
