@@ -1,48 +1,31 @@
-# This is a basic workflow to help you get started with Actions
+name: CI
 
-name: PR Merge Verification
-
-# Controls when the action will run. 
+# Runs on every pull request, regardless of the target branch. Do not add a
+# `branches:` filter here: this repo's default branch is `jest28`, and a filter
+# pinned to `main` silently disabled all checks (PRs merged with zero checks).
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
   pull_request:
-    branches: [ main ]
-
-  # Allows you to run this workflow manually from the Actions tab
+  push:
+    branches: [ jest28 ]
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  verify:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [12.x, 14.x, 16.x, 17.x]
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: Cache Node.js modules
-      uses: actions/cache@v2
-      with:
-        # npm cache files are stored in `~/.npm` on Linux/macOS
-        path: '**/node_modules'
-        key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/yarn.lock') }}
-        restore-keys: |
-          ${{ runner.OS }}-node-${{ matrix.node-version }}
-          ${{ runner.OS }}-node-
-          ${{ runner.OS }}-
-    - name: Install Dependencies
-      run: yarn install --frozen-lockfile
-    - name: Lint files
-      run: yarn lint
-    - name: Test
-      run: yarn test
-    - name: Generate assets
-      run: yarn build
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+
+      # Fails if package-lock.json has drifted from package.json, which is
+      # exactly the kind of change most PRs here make (dependency bumps).
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
